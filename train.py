@@ -36,7 +36,7 @@ def read_file_name(path):
 # For each patient, read eeg, ecg, res data individual
 # Input file path "../../xo13/CPM027.edf"
 # Output eeg, ecg, res data
-def read_data(path, eeg_signals, ecg_signals, res_signals):
+def read_data(data_path, eeg_signals, ecg_signals, res_signals):
     rawData = read_raw_edf(data_path)
     tmp = rawData.to_data_frame()
     eeg_data = tmp[eeg_signals]
@@ -60,3 +60,15 @@ def read_csv(xlsx_path, sheet_name = "Seizure Information"):
         if pd.isnull(row["Recording Start"]) and not pd.isnull(row["Patient ID"]):
             row["Recording Start"] = temp[row["Patient ID"]]
     return df
+
+def generate_seizure_index(patient_id, df):
+    df = df[df["Patient ID"] == patient_id]
+
+def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
+    df = read_csv(path, xlsx_path, sheet_name)
+    for file_name in read_file_name(path):
+        patient_id = file_name[-10:-4]
+        print(patient_id)
+
+xy_gen(path, xlsx_path, sheet_name)
+

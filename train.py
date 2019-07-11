@@ -42,12 +42,21 @@ def read_data(path, eeg_signals, ecg_signals, res_signals):
     eeg_data = tmp[eeg_signals]
     ecg_data = tmp[ecg_signals]
     res_data = tmp[res_signals]
-
     return eeg_data, ecg_data, res_data
 
+# For xlsx file, read Patient ID, Recording Start, Seizure Start, Seizure End Information
+# Input: xlsx file path, sheet name
+# Output: Dataframe - "Patient ID", "Recording Start", "Seizure Start", "Seizure End"
 def read_csv(xlsx_path, sheet_name = "Seizure Information"):
     df = pd.read_excel(xlsx_path, sheet_name=sheet_name)
     df = df[["Patient ID", "Recording Start", "Seizure Start", "Seizure End"]]
-    print(df)
-
-read_csv(xlsx_path)
+    df = df[df["Patient ID"].isnull() == False]
+    temp = {}
+    for _, row in df.iterrows():
+        if not pd.isnull(row["Recording Start"]):
+            #print(type(pd.to_timedelta(df["Recording Start"].astype(str))))
+            temp[row["Patient ID"]] = row["Recording Start"]
+    for _, row in df.iterrows():
+        if pd.isnull(row["Recording Start"]) and not pd.isnull(row["Patient ID"]):
+            row["Recording Start"] = temp[row["Patient ID"]]
+    return df

@@ -1,11 +1,23 @@
 import os
 import numpy as np
-import mne
+import pandas as pd
 from mne.io import read_raw_edf
 
+# Hyperparameters
 path = "../../.."
-data_path = "../../../CPM027.edf"
+#data_path = "../../../CPM027.edf"
+xlsx_path = "../../../Monash_University_Seizure_Detection_Database_" \
+            "September_2018_Deidentified.xlsx"
+sheet_name = "Seizure Information"
 
+eeg_signals = ['C3', 'F7', 'F4', 'C4', 'Fz', 'Cz', 'Pz', 'Fp1',
+               'P3', 'Fp2', 'P4', 'F3', 'F8']
+ecg_signals = ['ECG']
+res_signals = ['THO-', 'THO+', 'Air Flow']
+
+# normalization function
+# input: array
+# output: normalized array
 def normalization(arr):
     return (arr - np.mean(arr)) / (np.std(arr) + 2e-12)
 
@@ -24,12 +36,7 @@ def read_file_name(path):
 # For each patient, read eeg, ecg, res data individual
 # Input file path "../../xo13/CPM027.edf"
 # Output eeg, ecg, res data
-def read_data(path):
-    eeg_signals = ['C3', 'F7', 'F4', 'C4', 'Fz', 'Cz', 'Pz',
-                   'Fp1', 'P3', 'Fp2', 'P4', 'F3', 'F8']
-    ecg_signals = ['ECG']
-    res_signals = ['THO-', 'THO+', 'Air Flow']
-
+def read_data(path, eeg_signals, ecg_signals, res_signals):
     rawData = read_raw_edf(data_path)
     tmp = rawData.to_data_frame()
     eeg_data = tmp[eeg_signals]
@@ -38,7 +45,9 @@ def read_data(path):
 
     return eeg_data, ecg_data, res_data
 
-#def generate_windows
+def read_csv(xlsx_path, sheet_name = "Seizure Information"):
+    df = pd.read_excel(xlsx_path, sheet_name=sheet_name)
+    df = df[["Patient ID", "Recording Start", "Seizure Start", "Seizure End"]]
+    print(df)
 
-print(read_file_name(path))
-
+read_csv(xlsx_path)

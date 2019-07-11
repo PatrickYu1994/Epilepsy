@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from mne.io import read_raw_edf
 
+
 # Hyperparameters
 path = "../../.."
 #data_path = "../../../CPM027.edf"
@@ -94,37 +95,55 @@ def generate_seizure_index(patient_id, df):
     return seizure
 
 def window_gen(eeg_data, ecg_data, res_data, seizure_indexs):
-    batch_x_eeg = []
+    batch_x_eeg = []  # seizure
     batch_x_ecg = []
     batch_x_res = []
     batch_y = []
+    batch_x_eeg_n = []  # non-seizure
+    batch_x_ecg_n = []
+    batch_x_res_n = []
+    batch_y_n = []
     for index in range(0, (len(eeg_data) - window_size), stride):
         y = 0 # where 0 stands no_seizure, 1 stands for seizure
         for s_arr in seizure_indexs:
             if (index > s_arr[0]) and ((index + window_size) < s_arr[1]):
                 y = 1
-        batch_y.append([y])
-        batch_x_eeg.append(eeg_data[index: (index + window_size)].values.
-                           reshape(1, window_size*len(eeg_data.columns))[0])
-        batch_x_ecg.append(ecg_data[index: (index + window_size)].values.
-                           reshape(1, window_size*len(ecg_data.columns))[0])
-        batch_x_res.append(res_data[index: (index + window_size)].values.
-                           reshape(1, window_size * len(res_data.columns))[0])
+        if y == 1:
+            batch_y.append([y])
+            batch_x_eeg.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size*len(eeg_data.columns))[0]))
+            batch_x_ecg.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size*len(ecg_data.columns))[0]))
+            batch_x_res.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
+        else:
+            batch_y_n.append([y])
+            batch_x_eeg_n.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size * len(eeg_data.columns))[0]))
+            batch_x_ecg_n.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size * len(ecg_data.columns))[0]))
+            batch_x_res_n.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
+    index = np.random.randint(0, len(batch_x_eeg_n), int(len(batch_x_eeg) / p_n_rate))
+    batch_y += [batch_y_n[j] for j in index]
+    batch_x_eeg += [batch_x_eeg_n[j] for j in index]
+    batch_x_ecg += [batch_x_ecg_n[j] for j in index]
+    batch_x_res += [batch_x_res_n[j] for j in index]
     return batch_x_eeg, batch_x_ecg, batch_x_res, batch_y
 
 def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
     df = read_csv(xlsx_path, sheet_name)
+    xys = {"x_eeg":[], "x_ecg":[], "x_res":[], "y":[]}
+
+    # separate data into training, validation, test set based on patients
     for file_name in read_file_name(path):
         patient_id = file_name[-10:-4]
         seizure_indexs = generate_seizure_index(patient_id, df)
         eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
-        batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = \
-            window_gen(eeg_data, ecg_data, res_data, seizure_indexs)
-        print(len(batch_y))
-        break
+        batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs)
+        xys["y"] += batch_y
+        xys["x_eeg"] += batch_x_eeg
+        xys["x_ecg"] += batch_x_ecg
+        xys["x_res"] += batch_x_res
+    print(len(xys["x_eeg"]), len(xys["x_ecg"]), len(xys["x_res"]), len(xys["y"]))
+    print("total length:", len(xys["x_eeg"]))
+    # return training_set, validation_set, test_set
 
 xy_gen(path, xlsx_path, sheet_name)
-#print(np.random.randn(2,3))
 
 
 

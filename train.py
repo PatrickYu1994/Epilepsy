@@ -2,7 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 from mne.io import read_raw_edf
-
+import random
 
 # Hyperparameters
 path = "../../.."
@@ -127,10 +127,15 @@ def window_gen(eeg_data, ecg_data, res_data, seizure_indexs):
 
 def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
     df = read_csv(xlsx_path, sheet_name)
-    xys = {"x_eeg":[], "x_ecg":[], "x_res":[], "y":[]}
-
+    file_path = read_file_name(path)
+    xys_train = {"x_eeg":[], "x_ecg":[], "x_res":[], "y":[]} # training set
+    xys_validation = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # validation set
+    xys_test = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # test set
+    train_flag = random.sample(file_path, int(len(file_path) * train_rate))
+    validation_flag = random.sample((file_path - train_flag), int(len(file_path - train_flag) * val_rate / (val_rate + test_rate)))
+    test_flag = file_path - train_flag - validation_flag
     # separate data into training, validation, test set based on patients
-    for file_name in read_file_name(path):
+    for file_name in file_path:
         patient_id = file_name[-10:-4]
         seizure_indexs = generate_seizure_index(patient_id, df)
         eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)

@@ -6,7 +6,6 @@ import random
 
 # Hyperparameters
 path = "../../.."
-#data_path = "../../../CPM027.edf"
 xlsx_path = "../../../Monash_University_Seizure_Detection_Database_" \
             "September_2018_Deidentified.xlsx"
 sheet_name = "Seizure Information"
@@ -155,10 +154,3 @@ def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
             test_set["x_ecg"] += batch_x_ecg
             test_set["x_res"] += batch_x_res
     return training_set, validation_set, test_set
-
-training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
-
-
-
-
-

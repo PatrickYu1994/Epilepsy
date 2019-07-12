@@ -128,27 +128,37 @@ def window_gen(eeg_data, ecg_data, res_data, seizure_indexs):
 def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
     df = read_csv(xlsx_path, sheet_name)
     file_path = read_file_name(path)
-    xys_train = {"x_eeg":[], "x_ecg":[], "x_res":[], "y":[]} # training set
-    xys_validation = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # validation set
-    xys_test = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # test set
-    train_flag = random.sample(file_path, int(len(file_path) * train_rate))
-    validation_flag = random.sample((file_path - train_flag), int(len(file_path - train_flag) * val_rate / (val_rate + test_rate)))
-    test_flag = file_path - train_flag - validation_flag
+    training_set = {"x_eeg":[], "x_ecg":[], "x_res":[], "y":[]} # training set
+    validation_set = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # validation set
+    test_set = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # test set
+    training_flag = random.sample(file_path, int(len(file_path) * train_rate))
+    validation_flag = random.sample(list(set(file_path) - set(training_flag)), int(len(list(set(file_path) - set(training_flag))) * val_rate / (val_rate + test_rate)))
     # separate data into training, validation, test set based on patients
     for file_name in file_path:
         patient_id = file_name[-10:-4]
         seizure_indexs = generate_seizure_index(patient_id, df)
         eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
         batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs)
-        xys["y"] += batch_y
-        xys["x_eeg"] += batch_x_eeg
-        xys["x_ecg"] += batch_x_ecg
-        xys["x_res"] += batch_x_res
-    print(len(xys["x_eeg"]), len(xys["x_ecg"]), len(xys["x_res"]), len(xys["y"]))
-    print("total length:", len(xys["x_eeg"]))
-    # return training_set, validation_set, test_set
+        if file_name in training_flag:
+            training_set["y"] += batch_y
+            training_set["x_eeg"] += batch_x_eeg
+            training_set["x_ecg"] += batch_x_ecg
+            training_set["x_res"] += batch_x_res
+        elif file_name in validation_flag:
+            validation_set["y"] += batch_y
+            validation_set["x_eeg"] += batch_x_eeg
+            validation_set["x_ecg"] += batch_x_ecg
+            validation_set["x_res"] += batch_x_res
+        else:
+            test_set["y"] += batch_y
+            test_set["x_eeg"] += batch_x_eeg
+            test_set["x_ecg"] += batch_x_ecg
+            test_set["x_res"] += batch_x_res
+    return training_set, validation_set, test_set
 
-xy_gen(path, xlsx_path, sheet_name)
+training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
+
+
 
 
 

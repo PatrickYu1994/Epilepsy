@@ -19,7 +19,7 @@ res_signals = ['THO-', 'THO+', 'Air Flow']
 hz = 250 # hertz = 250
 window_size = 500
 stride = 250
-p_n_rate = 1/2 # seizure:non-seizure rate = 1:2
+p_n_rate = 1/5 # seizure:non-seizure rate = 1:5 (Totally 9011 seizure window)
 train_rate = 0.7 # 70% patients data are used for training model
 val_rate = 0.2 # 20% patients data are used for validation
 test_rate = 0.1 # 10% patients data are used for testing

@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from mne.io import read_raw_edf
 import random
+import scipy.io as scio
 
 # Hyperparameters
 path = "../../.."
@@ -154,3 +155,11 @@ def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
             test_set["x_ecg"] += batch_x_ecg
             test_set["x_res"] += batch_x_res
     return training_set, validation_set, test_set
+
+training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
+
+scio.savemat('./gen_dataset/training_set.mat', training_set)
+scio.savemat('./gen_dataset/validation_set.mat', validation_set)
+scio.savemat('./gen_dataset/test_set.mat', test_set)
+
+print("data saved successfully")

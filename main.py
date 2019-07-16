@@ -32,27 +32,23 @@ model = Sequential()
 # Dense layer to reduce dimensionality from 8500 to 4096
 model.add(Dense(input_dim=xs.shape[1], output_dim=4096, activation='relu'))
 # Reshape 2D to 3D
-model.add(Reshape((64, 64), input_shape=(64*64,)))
+model.add(Reshape((4096, 1), input_shape=(64*64,)))
 # two 1024 conv
-model.add(Conv1D(4096, 2, strides=2, activation='relu', padding='same'))
-model.add(Conv1D(4096, 2, strides=2, activation='relu', padding='same'))
+model.add(Conv1D(4096, 32, strides=2, activation='relu', padding='same'))
+model.add(Conv1D(4096, 32, strides=2, activation='relu', padding='same'))
 model.add(MaxPooling1D(2))
-model.add(Conv1D(2048, 4, strides=2, activation='relu', padding='same'))
-model.add(Conv1D(2048, 4, strides=2, activation='relu', padding='same'))
+model.add(Conv1D(2048, 16, strides=2, activation='relu', padding='same'))
+model.add(Conv1D(2048, 16, strides=2, activation='relu', padding='same'))
 model.add(MaxPooling1D(2))
 model.add(Conv1D(1024, 8, strides=2, activation='relu', padding='same'))
 model.add(Conv1D(1024, 8, strides=2, activation='relu', padding='same'))
 model.add(MaxPooling1D(2))
-model.add(Conv1D(512, 16, strides=2, activation='relu', padding='same'))
-model.add(Conv1D(512, 16, strides=2, activation='relu', padding='same'))
-model.add(MaxPooling1D(2))
-model.add(Conv1D(256, 32, strides=2, activation='relu', padding='same'))
-model.add(Conv1D(256, 32, strides=2, activation='relu', padding='same'))
+model.add(Conv1D(512, 4, strides=2, activation='relu', padding='same'))
+model.add(Conv1D(512, 4, strides=2, activation='relu', padding='same'))
 model.add(MaxPooling1D(2))
 model.add(GlobalAveragePooling1D())
 model.add(Dropout(0.3))
 model.add(Dense(1, activation='relu'))
-
 
 optimizer = SGD(lr=1e0)
 model.compile(loss='mean_squared_error',
@@ -62,6 +58,8 @@ history = model.fit(xs, ys, nb_epoch=50,
                     verbose=0)
 model.save('./Model/v1_2019_07_17')
 print(history)
+
+
 
 #tf.concat
 

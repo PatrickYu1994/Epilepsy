@@ -54,7 +54,7 @@ optimizer = SGD(lr=1e0)
 model.compile(loss='mean_squared_error',
               optimizer=optimizer)
 history = model.fit(xs, ys, nb_epoch=50,
-                    batch_size=xs.shape[0],
+                    batch_size=10,
                     verbose=0)
 model.save('./Model/v1_2019_07_17')
 print(history)

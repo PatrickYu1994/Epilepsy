@@ -60,7 +60,7 @@ model.compile(loss='mean_squared_error',
 history = model.fit(xs, ys, nb_epoch=50,
                     batch_size=xs.shape[0],
                     verbose=0)
-model.save('./v1_2019_07_17')
+model.save('./Model/v1_2019_07_17')
 print(history)
 
 #tf.concat

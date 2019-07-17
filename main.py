@@ -23,8 +23,8 @@ xs = np.append(np.append(training_set['x_eeg'], training_set['x_ecg'], axis=1), 
 #input_shape = [xs.shape[1], xs.shape[2]]
 ys = np.array(training_set['y'])
 
-#xs_val = np.append(np.append(validation_set['x_eeg'], validation_set['x_ecg'], axis=1), validation_set['x_res'], axis=1)
-#ys_val = np.array(validation_set['y'])
+xs_val = np.append(np.append(validation_set['x_eeg'], validation_set['x_ecg'], axis=1), validation_set['x_res'], axis=1)
+ys_val = np.array(validation_set['y'])
 
 
 # build model
@@ -50,12 +50,13 @@ model.add(GlobalAveragePooling1D())
 model.add(Dropout(0.3))
 model.add(Dense(1, activation='relu'))
 
-optimizer = SGD(lr=1e0)
-model.compile(loss='mean_squared_error',
-              optimizer=optimizer)
-history = model.fit(xs, ys, nb_epoch=50,
-                    batch_size=10,
-                    verbose=0)
+print(model.summary())
+
+model.compile(loss='binary_crossentropy',
+              optimizer='adam', metrics=['accuracy'])
+history = model.fit(xs, ys, epochs=2000,
+                    batch_size=200,
+                    verbose=1)
 model.save('./Model/v1_2019_07_17')
 print(history)
 

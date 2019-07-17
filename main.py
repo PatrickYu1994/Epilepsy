@@ -69,7 +69,7 @@ def build_model(xs):
     ######################################################################
     model.add(GlobalAveragePooling1D())
     model.add(Dropout(0.3))
-    model.add(Dense(1, activation='relu'))
+    model.add(Dense(1, activation='softmax'))
     return model
 
 if __name__ == '__main__':
@@ -86,7 +86,7 @@ if __name__ == '__main__':
     history = model.fit(
         train_ds[0],
         train_ds[1],
-        batch_size=1000,
+        batch_size=500,
         epochs=500,
         validation_data=val_ds,
         verbose=1)

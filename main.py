@@ -36,10 +36,11 @@ def build_model(xs):
     model = Sequential()
     # Dense layer to reduce dimensionality from 8500 to 4096
     #model.add(Dense(input_dim=xs.shape[1], output_dim=4096, activation='relu'))
-    model.add(Dense(input_dim=xs.shape[1], output_dim=1024, activation='relu'))
+    #model.add(Dense(input_dim=xs.shape[1], output_dim=1024, activation='relu'))
+    model.add(Reshape((xs.shape[1], 1), input_shape=(xs.shape[1],)))
     # Reshape 2D to 3D
     #model.add(Reshape((4096, 1), input_shape=(64*64,)))
-    model.add(Reshape((1024, 1), input_shape=(32*32,)))
+    #model.add(Reshape((1024, 1), input_shape=(32*32,)))
     # two 1024 conv
     #model.add(Conv1D(4096, 32, strides=2, activation='relu', padding='same'))
     #model.add(Conv1D(4096, 32, strides=2, activation='relu', padding='same'))
@@ -86,8 +87,8 @@ if __name__ == '__main__':
     history = model.fit(
         train_ds[0],
         train_ds[1],
-        batch_size=500,
-        epochs=500,
+        batch_size=5000,
+        epochs=2000,
         validation_data=val_ds,
         verbose=1)
     model.save('./Model/v1_2019_07_17')

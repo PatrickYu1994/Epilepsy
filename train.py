@@ -19,7 +19,7 @@ res_signals = ['THO-', 'THO+', 'Air Flow']
 hz = 250 # hertz = 250
 window_size = 500
 stride = 250
-p_n_rate = 1/5 # seizure:non-seizure rate = 1:5 (Totally 9011 seizure window)
+p_n_rate = 1/2 # seizure:non-seizure rate = 1:5 (Totally 9011 seizure window)
 train_rate = 0.7 # 70% patients data are used for training model
 val_rate = 0.2 # 20% patients data are used for validation
 test_rate = 0.1 # 10% patients data are used for testing
@@ -158,8 +158,8 @@ def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
 
 training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
 
-scio.savemat('./gen_dataset/training_set.mat', training_set)
-scio.savemat('./gen_dataset/validation_set.mat', validation_set)
-scio.savemat('./gen_dataset/test_set.mat', test_set)
+scio.savemat('./gen_dataset/training_set_1_2.mat', training_set)
+scio.savemat('./gen_dataset/validation_set_1_2.mat', validation_set)
+scio.savemat('./gen_dataset/test_set_1_2.mat', test_set)
 
 print("data saved successfully")

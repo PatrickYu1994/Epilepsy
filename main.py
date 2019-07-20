@@ -1,9 +1,13 @@
 import os
 import scipy.io as scio
 import tensorflow as tf
+import keras
 from keras.models import *
 from keras.layers import *
 import keras.backend.tensorflow_backend as KFT
+from sklearn.metrics import roc_auc_score
+import datetime
+from utils import auc, f1
 
 os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
 config = tf.ConfigProto()
@@ -12,24 +16,19 @@ sess = tf.Session(config=config)
 KFT.set_session(sess)
 
 # load preprocessing data
-training_set = scio.loadmat("./gen_dataset/training_set.mat")
-validation_set = scio.loadmat("./gen_dataset/validation_set.mat")
-#test_set = scio.loadmat("./gen_dataset/test_set.mat")
+training_set = scio.loadmat("./gen_dataset/training_set_1_2.mat")
+validation_set = scio.loadmat("./gen_dataset/validation_set_1_2.mat")
+# test_set = scio.loadmat("./gen_dataset/test_set_1_2.mat")
 print("loading successfully")
 
 def xs_gen(training_set):
     # merge all signal data together (training set & validation set)
     xs = np.append(np.append(training_set['x_eeg'], training_set['x_ecg'], axis=1), training_set['x_res'], axis=1)
     # add additional dimension [36174, 8500, 1], input shape is [8500, 1]
-    #xs = np.expand_dims(xs, axis=2)
-    #input_shape = [xs.shape[1], xs.shape[2]]
+    # xs = np.expand_dims(xs, axis=2)
+    # input_shape = [xs.shape[1], xs.shape[2]]
     ys = np.array(training_set['y'])
     return xs, ys
-
-def xs_val_gen(validation_set):
-    xs_val = np.append(np.append(validation_set['x_eeg'], validation_set['x_ecg'], axis=1), validation_set['x_res'], axis=1)
-    ys_val = np.array(validation_set['y'])
-    return xs_val, ys_val
 
 def build_model(xs):
     # build model
@@ -75,7 +74,7 @@ def build_model(xs):
 
 if __name__ == '__main__':
     train_ds = xs_gen(training_set)
-    val_ds = xs_val_gen(validation_set)
+    val_ds = xs_gen(validation_set)
 
     model = build_model(train_ds[0])
 

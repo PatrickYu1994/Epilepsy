@@ -75,25 +75,29 @@ def build_model(xs):
 if __name__ == '__main__':
     train_ds = xs_gen(training_set)
     val_ds = xs_gen(validation_set)
-
     model = build_model(train_ds[0])
-
     print(model.summary())
+    date = datetime.date.today().strftime("%Y%m%d")
+    filepath = "./Model/best_model/" + date + 'best_model.{epoch:02d}-{val_auc:.4f}.h5'
+    ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath,
+                                           monitor='val_auc',
+                                           save_best_only=True,
+                                           verbose=1,
+                                           mode='max')
 
-    model.compile(loss='binary_crossentropy',
-                  optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy', auc, f1])
 
     history = model.fit(
         train_ds[0],
         train_ds[1],
-        batch_size=500,
-        epochs=500,
+        batch_size=5000,
+        epochs=2000,
         validation_data=val_ds,
-        verbose=1)
-    model.save('./Model/v1_2019_07_17')
-    print(history)
+        callbacks=[ckpt])
 
-
+    model.save('./Model/v1_2019_07_17_pnrate_1_2')
 
 
 #tf.concat

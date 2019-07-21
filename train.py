@@ -106,15 +106,15 @@ def window_gen(eeg_data, ecg_data, res_data, seizure_indexs):
     for index in range(0, (len(eeg_data) - window_size), stride):
         y = [1, 0] # where 1,0 stands no_seizure, 0,1 stands for seizure
         for s_arr in seizure_indexs:
-            if (index > s_arr[0]) and ((index + window_size) < s_arr[1]):
-                y = 1
+            if (index >= s_arr[0]) and ((index + window_size) <= s_arr[1]):
+                y = [0, 1]
         if y == [0, 1]:
-            batch_y.append([y])
+            batch_y.append(y)
             batch_x_eeg.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size*len(eeg_data.columns))[0]))
             batch_x_ecg.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size*len(ecg_data.columns))[0]))
             batch_x_res.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
         else:
-            batch_y_n.append([y])
+            batch_y_n.append(y)
             batch_x_eeg_n.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size * len(eeg_data.columns))[0]))
             batch_x_ecg_n.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size * len(ecg_data.columns))[0]))
             batch_x_res_n.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))

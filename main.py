@@ -16,8 +16,10 @@ sess = tf.Session(config=config)
 KFT.set_session(sess)
 
 # load preprocessing data
-training_set = scio.loadmat("./gen_dataset/training_set_1_2.mat")
-validation_set = scio.loadmat("./gen_dataset/validation_set_1_2.mat")
+training_set = scio.loadmat("./gen_dataset/training_set.mat")
+#training_set = scio.loadmat("./gen_dataset/training_set_1_2.mat")
+validation_set = scio.loadmat("./gen_dataset/validation_set.mat")
+#validation_set = scio.loadmat("./gen_dataset/validation_set_1_2.mat")
 # test_set = scio.loadmat("./gen_dataset/test_set_1_2.mat")
 print("loading successfully")
 
@@ -27,9 +29,40 @@ def xs_gen(training_set):
     # add additional dimension [36174, 8500, 1], input shape is [8500, 1]
     # xs = np.expand_dims(xs, axis=2)
     # input_shape = [xs.shape[1], xs.shape[2]]
+
+    # convert original 0, 1 to [1, 0], [0, 1] separately
+    training_set['y'] = [lambda y: [1, 0] if y == 0 else [0, 1] for y in training_set['y']]
     ys = np.array(training_set['y'])
     return xs, ys
 
+def build_model(xs):
+    # build model
+    model = Sequential()
+    #model.add(Dense(input_dim=xs.shape[1], output_dim=16, activation='relu'))
+    model.add(Reshape((xs.shape[1], 1), input_shape=(xs.shape[1],)))
+
+    model.add(Conv1D(16, 16, strides=2, activation='relu', padding='same'))
+    model.add(Conv1D(16, 16, strides=2, activation='relu', padding='same'))
+    model.add(MaxPooling1D(2))
+
+    model.add(Conv1D(64, 8, strides=2, activation='relu', padding='same'))
+    model.add(Conv1D(64, 8, strides=2, activation='relu', padding='same'))
+    model.add(MaxPooling1D(2))
+
+    model.add(Conv1D(128, 4, strides=2, activation='relu', padding='same'))
+    model.add(Conv1D(128, 4, strides=2, activation='relu', padding='same'))
+    model.add(MaxPooling1D(2))
+
+    model.add(Conv1D(256, 2, strides=1, activation='relu', padding='same'))
+    model.add(Conv1D(256, 2, strides=1, activation='relu', padding='same'))
+    model.add(MaxPooling1D(2))
+
+    model.add(GlobalAveragePooling1D())
+    model.add(Dropout(0.3))
+    model.add(Dense(2, activation='softmax'))
+    return model
+
+'''
 def build_model(xs):
     # build model
     model = Sequential()
@@ -71,6 +104,7 @@ def build_model(xs):
     model.add(Dropout(0.3))
     model.add(Dense(1, activation='sigmoid'))
     return model
+'''
 
 if __name__ == '__main__':
     train_ds = xs_gen(training_set)

@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import scipy.io as scio
 import tensorflow as tf
 import keras
@@ -29,10 +30,7 @@ def xs_gen(training_set):
     # add additional dimension [36174, 8500, 1], input shape is [8500, 1]
     # xs = np.expand_dims(xs, axis=2)
     # input_shape = [xs.shape[1], xs.shape[2]]
-
-    # convert original 0, 1 to [1, 0], [0, 1] separately
-    training_set['y'] = [lambda y: [1, 0] if y == 0 else [0, 1] for y in training_set['y']]
-    ys = np.array(training_set['y'])
+    ys = keras.utils.np_utils.to_categorical(training_set['y'], 2)
     return xs, ys
 
 def build_model(xs):
@@ -126,8 +124,8 @@ if __name__ == '__main__':
     history = model.fit(
         train_ds[0],
         train_ds[1],
-        batch_size=5000,
-        epochs=2000,
+        batch_size=2000,
+        epochs=1500,
         validation_data=val_ds,
         callbacks=[ckpt])
 

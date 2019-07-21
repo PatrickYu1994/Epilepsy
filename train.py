@@ -158,8 +158,8 @@ def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
 
 training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
 
-scio.savemat('./gen_dataset/training_set_1_2.mat', training_set)
-scio.savemat('./gen_dataset/validation_set_1_2.mat', validation_set)
-scio.savemat('./gen_dataset/test_set_1_2.mat', test_set)
+scio.savemat('./gen_dataset/training_set.mat', training_set)
+scio.savemat('./gen_dataset/validation_set.mat', validation_set)
+scio.savemat('./gen_dataset/test_set.mat', test_set)
 
 print("data saved successfully")

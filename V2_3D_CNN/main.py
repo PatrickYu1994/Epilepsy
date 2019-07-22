@@ -81,6 +81,8 @@ if __name__ == '__main__':
 
     tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
 
+    #adam = keras.optimizers.adam(lr=1e-5)
+
     model.compile(loss='categorical_crossentropy',
                   optimizer='adam',
                   metrics=['accuracy', auc, f1])

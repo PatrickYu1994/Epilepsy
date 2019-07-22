@@ -36,7 +36,7 @@ test_rate = 0.1 # 10% patients data are used for testing
 # input: array
 # output: normalized array
 def normalization(arr):
-    return (arr - np.mean(arr)) / (np.std(arr) + 2e-12)
+    return (arr - np.mean(arr, axis=0)) / (np.std(arr, axis=0) + 2e-12)
 
 # function read_file_name
 # input: path of the file directory "../../xo13"
@@ -124,17 +124,17 @@ def window_gen(eeg_data, ecg_data, res_data, seizure_indexs, patient_id):
                 #batch_x_eeg.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size*len(eeg_data.columns))[0]))
                 #batch_x_ecg.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size*len(ecg_data.columns))[0]))
                 #batch_x_res.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
-                batch_x_eeg.append(eeg_data[index: (index + window_size)].values)
-                batch_x_ecg.append(ecg_data[index: (index + window_size)].values)
-                batch_x_res.append(res_data[index: (index + window_size)].values)
+                batch_x_eeg.append(normalization(eeg_data[index: (index + window_size)].values))
+                batch_x_ecg.append(normalization(ecg_data[index: (index + window_size)].values))
+                batch_x_res.append(normalization(res_data[index: (index + window_size)].values))
             else:
                 batch_y_n.append(y)
                 #batch_x_eeg_n.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size * len(eeg_data.columns))[0]))
                 #batch_x_ecg_n.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size * len(ecg_data.columns))[0]))
                 #batch_x_res_n.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
-                batch_x_eeg_n.append(eeg_data[index: (index + window_size)].values)
-                batch_x_ecg_n.append(ecg_data[index: (index + window_size)].values)
-                batch_x_res_n.append(res_data[index: (index + window_size)].values)
+                batch_x_eeg_n.append(normalization(eeg_data[index: (index + window_size)].values))
+                batch_x_ecg_n.append(normalization(ecg_data[index: (index + window_size)].values))
+                batch_x_res_n.append(normalization(res_data[index: (index + window_size)].values))
     index = np.random.randint(0, len(batch_x_eeg_n), int(len(batch_x_eeg) / p_n_rate))
     batch_y += [batch_y_n[j] for j in index]
     batch_x_eeg += [batch_x_eeg_n[j] for j in index]

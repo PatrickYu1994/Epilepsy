@@ -1,0 +1,19 @@
+2019/07/22 Version 2 
+Yu Liu
+
+CONV1D
+channel 1: xxxx
+channel 2: xxxx
+channel 3: xxxx
+channel 4: xxxx
+
+Improve from 
+Version 1:
+channel 1,2,3,4: xxxx xxxx xxxx xxxx
+
+to
+Version 2:
+channel 1: xxxx
+channel 2: xxxx
+channel 3: xxxx
+channel 4: xxxx

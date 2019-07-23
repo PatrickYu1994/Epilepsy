@@ -53,7 +53,7 @@ def build_model(xs):
     model.add(Conv1D(64, 8, strides=2, activation='relu', padding='same'))
     model.add(MaxPooling1D(2))
 
-    model.add(Conv1D(128, 4, strides=1, activation='relu', padding='same'))
+    model.add(Conv1D(128, 4, strides=2, activation='relu', padding='same'))
     model.add(Conv1D(128, 4, strides=1, activation='relu', padding='same'))
     model.add(MaxPooling1D(2))
 
@@ -73,13 +73,9 @@ if __name__ == '__main__':
     print(model.summary())
     date = datetime.date.today().strftime("%Y%m%d")
     filepath = "./Model/best_model/" + date + 'best_model.{epoch:02d}-{val_auc:.4f}.h5'
-    ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath,
-                                           monitor='val_auc',
-                                           save_best_only=True,
-                                           verbose=1,
-                                           mode='max')
+    ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath, monitor='val_auc', save_best_only=True, verbose=1, mode='max')
 
-    tensorboard = TensorBoard(log_dir="logs/{}".format(time()))
+    tensorboard = TensorBoard(log_dir="./logs")
 
     #adam = keras.optimizers.adam(lr=1e-5)
 
@@ -95,8 +91,7 @@ if __name__ == '__main__':
         validation_data=val_ds,
         callbacks=[ckpt, tensorboard])
 
-    model.save('./Model/v1_2019_07_17_pnrate_1_2')
-
+    model.save('./Model/v1_2019_07_23')
 
 #tf.concat
 

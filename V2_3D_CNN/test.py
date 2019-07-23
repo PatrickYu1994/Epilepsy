@@ -1,33 +1,27 @@
+import os
 import numpy as np
+import pandas as pd
+from mne.io import read_raw_edf
+import mne
+import random
 import scipy.io as scio
-#from main2 import xs_gen
-a = np.array([[1,2,3],
-              [4,5,6]])
-print(a.shape)
-print(np.mean(a, axis=0))
-print((a - np.mean(a, axis=0))/np.std(a, axis=0))
 
-'''
-test_set = scio.loadmat("./gen_dataset/test_set.mat")
+data_path = "../../../CPM002.edf"
+eeg_signals = ['C3', 'F7', 'F4', 'C4', 'Fz', 'Cz', 'Pz', 'Fp1',
+               'P3', 'Fp2', 'P4', 'F3', 'F8']
+ecg_signals = ['ECG']
+res_signals = ['THO-', 'THO+', 'Air Flow']
 
-x, y = xs_gen(test_set)
-print(x.shape) # (987, 500, 17)
-print(y.shape)
-print(y)
-#print(x.transpose(0,2,1).shape)
+def read_data(data_path, eeg_signals, ecg_signals, res_signals):
+    rawData = read_raw_edf(data_path)
+    tmp = rawData.to_data_frame()
+    eeg_data = pd.DataFrame(mne.filter.filter_data(np.array(tmp[eeg_signals].T), 250, l_freq=40, h_freq=1).T)
+    #eeg_data = tmp[eeg_signals]
+    ecg_data = tmp[ecg_signals]
+    res_data = tmp[res_signals]
+    return eeg_data, ecg_data, res_data
+eeg, ecg, res = read_data(data_path, eeg_signals, ecg_signals, res_signals)
 
-print(x.shape[0])
-print(x.shape[1])
-print(x.shape[2])
-print(y.shape)
-
-y = np.array(test_set['y'])
-
-a = np.array(test_set['x_eeg'])
-b = np.array(test_set['x_ecg'])
-c = np.array(test_set['x_res'])
-
-x1 = np.concatenate((a, b, c), axis=2)
-print(x1.shape)
-print(y.shape)
-'''
+print(eeg)
+print(eeg.shape)
+print(type(eeg))

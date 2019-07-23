@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pandas as pd
 from mne.io import read_raw_edf
+import mne
 import random
 import scipy.io as scio
 
@@ -56,9 +57,12 @@ def read_file_name(path):
 def read_data(data_path, eeg_signals, ecg_signals, res_signals):
     rawData = read_raw_edf(data_path)
     tmp = rawData.to_data_frame()
-    eeg_data = tmp[eeg_signals]
-    ecg_data = tmp[ecg_signals]
-    res_data = tmp[res_signals]
+    #eeg_data = tmp[eeg_signals]
+    eeg_data = pd.DataFrame(mne.filter.filter_data(np.array(tmp[eeg_signals].T), 250, l_freq=40, h_freq=1).T)
+    #ecg_data = tmp[ecg_signals]
+    ecg_data = pd.DataFrame(mne.filter.filter_data(np.array(tmp[ecg_signals].T), 250, l_freq=40, h_freq=1).T)
+    #res_data = tmp[res_signals]
+    res_data = pd.DataFrame(mne.filter.filter_data(np.array(tmp[res_signals].T), 250, l_freq=40, h_freq=1).T)
     return eeg_data, ecg_data, res_data
 
 # For xlsx file, read Patient ID, Recording Start, Seizure Start, Seizure End Information

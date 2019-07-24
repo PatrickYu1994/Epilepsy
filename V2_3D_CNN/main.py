@@ -73,58 +73,40 @@ if __name__ == '__main__':
     print(model.summary())
     date = datetime.date.today().strftime("%Y%m%d")
     filepath = "./Model/best_model/" + date + 'best_model.{epoch:02d}-{val_auc:.4f}.h5'
-    ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath, monitor='val_auc', save_best_only=True, verbose=1, mode='max')
+    ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath,
+                                           monitor='val_auc',
+                                           save_best_only=True,
+                                           verbose=1,
+                                           mode='max')
 
-    tensorboard = TensorBoard(log_dir="./logs")
+    #tensorboard = TensorBoard(log_dir="./logs")
 
-    #adam = keras.optimizers.adam(lr=1e-5)
+    adam = keras.optimizers.adam(lr=1e-3)
 
     model.compile(loss='categorical_crossentropy',
-                  optimizer='adam',
+                  optimizer=adam,
                   metrics=['accuracy', auc, f1])
 
-    history = model.fit(
+    hist = model.fit(
         train_x,
         train_y,
         batch_size=2000,
-        epochs=1500,
+        epochs=2,
         validation_data=val_ds,
-        callbacks=[ckpt, tensorboard])
+        #callbacks=[ckpt, tensorboard])
+        callbacks=[ckpt])
 
-    model.save('./Model/v1_2019_07_23')
-
-#tf.concat
-
-
-
-
-
-
-
-
-
-
+    #print(hist.history.keys()) #dict_keys(['val_loss', 'val_acc', 'val_auc', 'val_f1', 'loss', 'acc', 'auc', 'f1'])
+    with open("./Model/best_model/epoch_information/epoch_information.txt", 'a') as f:
+        for epo in range(len(hist.history['val_auc'])):
+            s = "epochs: " + str(epo+1) + " loss: " + str(hist.history['loss'][epo])[0:6] + \
+                " acc: " + str(hist.history['acc'][epo])[0:6] + " auc: " + str(hist.history['auc'][epo])[0:6] + \
+                " f1: " + str(hist.history['f1'][epo])[0:6] + " val_loss: " + str(hist.history['val_loss'][epo])[0:6] + \
+                " val_acc: " + str(hist.history['val_acc'][epo])[0:6] + " val_auc: " +\
+                str(hist.history['val_auc'][epo])[0:6] + " val_f1: " + str(hist.history['val_f1'][epo])[0:6]
+            f.write((s+'\n'))
+    f.close()
 
 
 
-#print(xs.shape[0])
-#print(xs.shape)
-#print(ys.shape)
-
-
-
-#dt = tf.data.Dataset.from_tensor_slices((test_set['x_ecg'], test_set['x_eeg'], test_set['x_res'], test_set['y']))
-
-#def build_model():
-
-#print(test_set.keys())
-#print(test_set['x_eeg'])
-
-#a = [[1,2,3], [3,2,1]]
-#b = [[1,2,3], [3,2,1]]
-#c = [[1,2,3], [3,2,1]]
-#print(np.append(np.append(a,b,axis=1), c, axis=1))
-
-
-
-
+    print(hist.history['val_auc'])

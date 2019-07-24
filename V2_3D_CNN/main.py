@@ -66,6 +66,11 @@ def build_model(xs):
     model.add(Dense(2, activation='softmax'))
     return model
 
+class CustomSaver(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        if epoch % 20 == 0:  # or save after some epoch, each k-th epoch etc.
+            self.model.save("./Model/each100Epochs/model_{}.hd5".format(epoch+1))
+
 if __name__ == '__main__':
     train_x, train_y = xs_gen(training_set)
     val_ds = xs_gen(validation_set)
@@ -78,7 +83,7 @@ if __name__ == '__main__':
                                            save_best_only=True,
                                            verbose=1,
                                            mode='max')
-
+    saver = CustomSaver()
     #tensorboard = TensorBoard(log_dir="./logs")
 
     adam = keras.optimizers.adam(lr=1e-3)
@@ -91,13 +96,13 @@ if __name__ == '__main__':
         train_x,
         train_y,
         batch_size=2000,
-        epochs=2,
+        epochs=6,
         validation_data=val_ds,
         #callbacks=[ckpt, tensorboard])
-        callbacks=[ckpt])
+        callbacks=[ckpt, saver])
 
-    #print(hist.history.keys()) #dict_keys(['val_loss', 'val_acc', 'val_auc', 'val_f1', 'loss', 'acc', 'auc', 'f1'])
-    with open("./Model/best_model/epoch_information/epoch_information.txt", 'a') as f:
+    #dict_keys(['val_loss', 'val_acc', 'val_auc', 'val_f1', 'loss', 'acc', 'auc', 'f1'])
+    with open("./Model/epoch_information/epoch_information.txt", 'a') as f:
         for epo in range(len(hist.history['val_auc'])):
             s = "epochs: " + str(epo+1) + " loss: " + str(hist.history['loss'][epo])[0:6] + \
                 " acc: " + str(hist.history['acc'][epo])[0:6] + " auc: " + str(hist.history['auc'][epo])[0:6] + \
@@ -106,7 +111,3 @@ if __name__ == '__main__':
                 str(hist.history['val_auc'][epo])[0:6] + " val_f1: " + str(hist.history['val_f1'][epo])[0:6]
             f.write((s+'\n'))
     f.close()
-
-
-
-    print(hist.history['val_auc'])

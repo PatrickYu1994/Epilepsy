@@ -1,27 +1,27 @@
-import os
-import numpy as np
-import pandas as pd
-from mne.io import read_raw_edf
-import mne
-import random
 import scipy.io as scio
+from main import xs_gen
+from keras.models import load_model
+from utils import auc, f1
+from sklearn import metrics
+import numpy as np
+#np.set_printoptions(threshold=np.inf)
 
-data_path = "../../../CPM002.edf"
-eeg_signals = ['C3', 'F7', 'F4', 'C4', 'Fz', 'Cz', 'Pz', 'Fp1',
-               'P3', 'Fp2', 'P4', 'F3', 'F8']
-ecg_signals = ['ECG']
-res_signals = ['THO-', 'THO+', 'Air Flow']
+test_set = xs_gen(scio.loadmat("./gen_dataset/test_set.mat"))
 
-def read_data(data_path, eeg_signals, ecg_signals, res_signals):
-    rawData = read_raw_edf(data_path)
-    tmp = rawData.to_data_frame()
-    eeg_data = pd.DataFrame(mne.filter.filter_data(np.array(tmp[eeg_signals].T), 250, l_freq=40, h_freq=1).T)
-    #eeg_data = tmp[eeg_signals]
-    ecg_data = tmp[ecg_signals]
-    res_data = tmp[res_signals]
-    return eeg_data, ecg_data, res_data
-eeg, ecg, res = read_data(data_path, eeg_signals, ecg_signals, res_signals)
+model = load_model('./Model/v1_2019_07_23', custom_objects={"auc": auc, "f1": f1})
 
-print(eeg)
-print(eeg.shape)
-print(type(eeg))
+#prediction = model.predict(test_set[0])
+#p_rate = prediction[:, 1]
+prediction = model.predict_classes(test_set[0])
+y_true = scio.loadmat("./gen_dataset/test_set.mat")['y']
+y_true = [arr[0] for arr in y_true]
+
+#fpr, tpr, thresholds = metrics.roc_curve(y_true, p_rate)
+fpr, tpr, thresholds = metrics.roc_curve(y_true, prediction)
+val_auc = metrics.auc(fpr, tpr) # 1_5, v2: 0.5732863286555002
+                                # 1_2, v1: 0.7396738206950123
+                                # 1_2, CNN3D V1: auc:0.4302690582959642 / fscore:0.1211890243902439
+f_score = metrics.f1_score(y_true=y_true, y_pred=prediction)
+print("auc: ", val_auc)
+print("f_sc: ", f_score)
+

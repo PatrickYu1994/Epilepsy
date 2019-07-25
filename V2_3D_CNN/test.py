@@ -8,7 +8,7 @@ import numpy as np
 
 test_set = xs_gen(scio.loadmat("./gen_dataset/test_set.mat"))
 
-model = load_model('./Model/20190723best_model.50-0.7061.h5', custom_objects={"auc": auc, "f1": f1})
+model = load_model('./Model/20190725best_model.10-0.7270.h5', custom_objects={"auc": auc, "f1": f1})
 
 #prediction = model.predict(test_set[0])
 #p_rate = prediction[:, 1]
@@ -21,6 +21,8 @@ fpr, tpr, thresholds = metrics.roc_curve(y_true, prediction)
 val_auc = metrics.auc(fpr, tpr) # 1_5, v2: auc:0.5732863286555002
                                 # 1_2, v1: auc:0.7396738206950123
                                 # 1_2, CNN3D V1: auc:0.4302690582959642 / fscore:0.1211890243902439
+                                # 1_2, CNN3D only EEG: auc: 0.5003379900856242 / fscore: 0.3485933078075578
+                                # 1_2, CNN3D All 3 signals: auc: 0.437584497521406 / fscore: 0.1766329346826127
 f_score = metrics.f1_score(y_true=y_true, y_pred=prediction)
 print("auc: ", val_auc)
 print("f_sc: ", f_score)

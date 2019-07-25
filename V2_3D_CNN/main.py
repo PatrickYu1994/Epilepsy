@@ -37,6 +37,7 @@ def xs_gen(data_set):
     ecg = np.array(data_set['x_ecg'])
     res = np.array(data_set['x_res'])
     xs = np.concatenate((eeg, ecg, res), axis=2) # (no rows, signals size, no channels) (e.g. 987, 500, 17)
+    #xs = eeg
     #ys = keras.utils.np_utils.to_categorical(training_set['y'], 2)
     ys = np.array(data_set['y'])
     return xs, ys
@@ -68,7 +69,7 @@ def build_model(xs):
 
 class CustomSaver(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
-        if epoch % 20 == 0:  # or save after some epoch, each k-th epoch etc.
+        if epoch % 40 == 0:  # or save after some epoch, each k-th epoch etc.
             self.model.save("./Model/each100Epochs/model_{}.hd5".format(epoch+1))
 
 if __name__ == '__main__':
@@ -86,7 +87,7 @@ if __name__ == '__main__':
     saver = CustomSaver()
     #tensorboard = TensorBoard(log_dir="./logs")
 
-    adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0)
+    adam = keras.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.95)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=adam,
@@ -95,8 +96,8 @@ if __name__ == '__main__':
     hist = model.fit(
         train_x,
         train_y,
-        batch_size=2000,
-        epochs=2000,
+        batch_size=200,
+        epochs=500,
         validation_data=val_ds,
         #callbacks=[ckpt, tensorboard])
         callbacks=[ckpt, saver])

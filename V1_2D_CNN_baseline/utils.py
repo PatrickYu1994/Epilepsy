@@ -2,6 +2,7 @@ import tensorflow as tf
 from keras import backend as K
 import numpy as np
 
+
 #AUC for a binary classifier V1
 def auc(y_true, y_pred):
     ptas = tf.stack([binary_PTA(y_true,y_pred,k) for k in np.linspace(0, 1, 1000)],axis=0)

@@ -1,170 +1,109 @@
-'''
-CONV1D
-channel 1,2,3,4: xxxx xxxx xxxx xxxx
-'''
-
 import os
-import numpy as np
-import pandas as pd
-from mne.io import read_raw_edf
-import random
 import scipy.io as scio
+import tensorflow as tf
+import keras
+from keras.models import *
+from keras.layers import *
+import keras.backend.tensorflow_backend as KFT
+import datetime
+from utils import auc, f1
 
-# Hyperparameters
-path = "../../.."
-xlsx_path = "../../../Monash_University_Seizure_Detection_Database_" \
-            "September_2018_Deidentified.xlsx"
-sheet_name = "Seizure Information"
+os.environ['CUDA_VISIBLE_DEVICES'] = '0, 1'
+config = tf.ConfigProto()
+config.gpu_options.allow_growth = True
+sess = tf.Session(config=config)
+KFT.set_session(sess)
 
-eeg_signals = ['C3', 'F7', 'F4', 'C4', 'Fz', 'Cz', 'Pz', 'Fp1',
-               'P3', 'Fp2', 'P4', 'F3', 'F8']
-ecg_signals = ['ECG']
-res_signals = ['THO-', 'THO+', 'Air Flow']
+# generate corresponding x and y
+def xs_gen(data_set):
+    eeg = np.array(data_set['x_eeg'])
+    ecg = np.array(data_set['x_ecg'])
+    res = np.array(data_set['x_res'])
+    xs = np.concatenate((eeg, ecg, res), axis=2)  # (batch, signals size, no channels) (e.g. 987, 500, 17)
+    ys = np.array(data_set['y'])
+    return xs, ys
 
-hz = 250 # hertz = 250
-window_size = 500
-stride = 250
-p_n_rate = 1/2 # seizure:non-seizure rate = 1:5 (Totally 9011 seizure window)
-train_rate = 0.7 # 70% patients data are used for training model
-val_rate = 0.2 # 20% patients data are used for validation
-test_rate = 0.1 # 10% patients data are used for testing
+def build_model(xs):
+    # build model
+    model = Sequential()
+    model.add(Conv1D(16, 16, strides=2, activation='relu', kernel_initializer='he_uniform',
+                     input_shape=(xs.shape[1], xs.shape[2])))
+    model.add(Conv1D(16, 16, strides=2, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
+    model.add(MaxPooling1D(2))
 
-# normalization function
-# input: array
-# output: normalized array
-def normalization(arr):
-    return (arr - np.mean(arr)) / (np.std(arr) + 2e-12)
+    model.add(Conv1D(64, 8, strides=2, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
+    model.add(Conv1D(64, 8, strides=2, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
+    model.add(MaxPooling1D(2))
 
-# function read_file_name
-# input: path of the file directory "../../xo13"
-# output: file path array under the file directory
-def read_file_name(path):
-    files = os.listdir(path)
-    file_name = []
-    for file in files:
-        if file[-3:] == "edf":
-            file_path = path + "/" + file
-            file_name.append(file_path)
-    return file_name
+    model.add(Conv1D(128, 4, strides=2, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
+    model.add(Conv1D(128, 4, strides=1, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
+    model.add(MaxPooling1D(2))
 
-# For each patient, read eeg, ecg, res data individual
-# Input file path "../../xo13/CPM027.edf"
-# Output eeg, ecg, res data
-def read_data(data_path, eeg_signals, ecg_signals, res_signals):
-    rawData = read_raw_edf(data_path)
-    tmp = rawData.to_data_frame()
-    eeg_data = tmp[eeg_signals]
-    ecg_data = tmp[ecg_signals]
-    res_data = tmp[res_signals]
-    return eeg_data, ecg_data, res_data
+    model.add(Conv1D(256, 2, strides=1, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
+    model.add(Conv1D(256, 2, strides=1, activation='relu', padding='same',
+                     kernel_initializer='he_uniform'))
 
-# For xlsx file, read Patient ID, Recording Start, Seizure Start, Seizure End Information
-# Input: xlsx file path, sheet name
-# Output: Dataframe - "Patient ID", "Recording Start", "Seizure Start", "Seizure End"
-def read_csv(xlsx_path, sheet_name = "Seizure Information"):
-    df = pd.read_excel(xlsx_path, sheet_name=sheet_name)
-    df = df[["Patient ID", "Recording Start", "Seizure Start", "Seizure End"]]
-    df = df[df["Patient ID"].isnull() == False]
-    temp = {}
-    for _, row in df.iterrows():
-        if not pd.isnull(row["Recording Start"]):
-            temp[row["Patient ID"]] = row["Recording Start"]
-    for _, row in df.iterrows():
-        if pd.isnull(row["Recording Start"]) and not pd.isnull(row["Patient ID"]):
-            row["Recording Start"] = temp[row["Patient ID"]]
-    return df
+    model.add(MaxPooling1D(2))
+    model.add(GlobalAveragePooling1D())
+    model.add(Dropout(0.3))
+    model.add(Dense(2, activation='softmax', kernel_initializer='he_uniform'))
+    return model
 
-# function change time to corresponding index
-# input: dataframe of time
-# output: dataframe of index
-def time_to_index(recording, seizure):
-    recording = pd.to_timedelta(recording.astype(str))
-    seizure = pd.to_timedelta(seizure.astype(str))
-    index = ((seizure - recording) / np.timedelta64(1, 's')) * hz
-    return index
+class CustomSaver(keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs={}):
+        if epoch % 5 == 0:  # or save after some epoch, each k-th epoch etc.
+            self.model.save("./result/eachEpochInterval/model_{}.hd5".format(epoch + 1))
 
-# function calculate corresponding seizure start / index for each patient
-# input: patient ID, dataframe from function - read_csv()
-# output: array containing seizure start / end index - [[], [], []]
-def generate_seizure_index(patient_id, df):
-    df = df[df["Patient ID"] == patient_id]
-    seizure = []
-    start_index = time_to_index(df["Recording Start"], df["Seizure Start"])
-    end_index = time_to_index(df["Recording Start"], df["Seizure End"])
-    for start, end in zip(start_index, end_index):
-        if start < 0:
-            start = start + 24 * 3600 * hz
-        if end < 0:
-            end = end + 24 * 3600 * hz
-        seizure.append([start, end])
-    return seizure
+if __name__ == '__main__':
+    # load preprocessing data
+    training_set = scio.loadmat("./data_set/training_set.mat")
+    validation_set = scio.loadmat("./data_set/validation_set.mat")
 
-def window_gen(eeg_data, ecg_data, res_data, seizure_indexs):
-    batch_x_eeg = []  # seizure
-    batch_x_ecg = []
-    batch_x_res = []
-    batch_y = []
-    batch_x_eeg_n = []  # non-seizure
-    batch_x_ecg_n = []
-    batch_x_res_n = []
-    batch_y_n = []
-    for index in range(0, (len(eeg_data) - window_size), stride):
-        y = [1, 0] # where 1,0 stands no_seizure, 0,1 stands for seizure
-        for s_arr in seizure_indexs:
-            if (index >= s_arr[0]) and ((index + window_size) <= s_arr[1]):
-                y = [0, 1]
-        if y == [0, 1]:
-            batch_y.append(y)
-            batch_x_eeg.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size*len(eeg_data.columns))[0]))
-            batch_x_ecg.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size*len(ecg_data.columns))[0]))
-            batch_x_res.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
-        else:
-            batch_y_n.append(y)
-            batch_x_eeg_n.append(normalization(eeg_data[index: (index + window_size)].values.reshape(1, window_size * len(eeg_data.columns))[0]))
-            batch_x_ecg_n.append(normalization(ecg_data[index: (index + window_size)].values.reshape(1, window_size * len(ecg_data.columns))[0]))
-            batch_x_res_n.append(normalization(res_data[index: (index + window_size)].values.reshape(1, window_size * len(res_data.columns))[0]))
-    index = np.random.randint(0, len(batch_x_eeg_n), int(len(batch_x_eeg) / p_n_rate))
-    batch_y += [batch_y_n[j] for j in index]
-    batch_x_eeg += [batch_x_eeg_n[j] for j in index]
-    batch_x_ecg += [batch_x_ecg_n[j] for j in index]
-    batch_x_res += [batch_x_res_n[j] for j in index]
-    return batch_x_eeg, batch_x_ecg, batch_x_res, batch_y
+    train_x, train_y = xs_gen(training_set)
+    val_ds = xs_gen(validation_set)
+    model = build_model(train_x)
+    print(model.summary())
 
-def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
-    df = read_csv(xlsx_path, sheet_name)
-    file_path = read_file_name(path)
-    training_set = {"x_eeg":[], "x_ecg":[], "x_res":[], "y":[]} # training set
-    validation_set = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # validation set
-    test_set = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # test set
-    training_flag = random.sample(file_path, int(len(file_path) * train_rate))
-    validation_flag = random.sample(list(set(file_path) - set(training_flag)), int(len(list(set(file_path) - set(training_flag))) * val_rate / (val_rate + test_rate)))
-    # separate data into training, validation, test set based on patients
-    for file_name in file_path:
-        patient_id = file_name[-10:-4]
-        seizure_indexs = generate_seizure_index(patient_id, df)
-        eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
-        batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs)
-        if file_name in training_flag:
-            training_set["y"] += batch_y
-            training_set["x_eeg"] += batch_x_eeg
-            training_set["x_ecg"] += batch_x_ecg
-            training_set["x_res"] += batch_x_res
-        elif file_name in validation_flag:
-            validation_set["y"] += batch_y
-            validation_set["x_eeg"] += batch_x_eeg
-            validation_set["x_ecg"] += batch_x_ecg
-            validation_set["x_res"] += batch_x_res
-        else:
-            test_set["y"] += batch_y
-            test_set["x_eeg"] += batch_x_eeg
-            test_set["x_ecg"] += batch_x_ecg
-            test_set["x_res"] += batch_x_res
-    return training_set, validation_set, test_set
+    date = datetime.date.today().strftime("%Y%m%d")
+    filepath = "./result/best_model/" + date + 'best_model.{epoch:02d}-{val_auc:.4f}.h5'
+    ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath,
+                                           monitor='val_auc',
+                                           save_best_only=True,
+                                           verbose=1,
+                                           mode='max')
+    saver = CustomSaver()
+    # tensorboard = TensorBoard(log_dir="./logs")
 
-training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
+    # adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.95)
+    adam = keras.optimizers.Adam(lr=1e-04)
 
-scio.savemat('./gen_dataset/training_set.mat', training_set)
-scio.savemat('./gen_dataset/validation_set.mat', validation_set)
-scio.savemat('./gen_dataset/test_set.mat', test_set)
+    model.compile(loss='categorical_crossentropy',
+                  optimizer=adam,
+                  metrics=['accuracy', auc, f1])
 
-print("data saved successfully")
+    hist = model.fit(
+        train_x,
+        train_y,
+        batch_size=200,
+        epochs=150,
+        validation_data=val_ds,
+        # callbacks=[ckpt, tensorboard])
+        callbacks=[ckpt, saver])
+
+    # dict_keys(['val_loss', 'val_acc', 'val_auc', 'val_f1', 'loss', 'acc', 'auc', 'f1'])
+    with open("./result/epoch_information/epoch_information.txt", 'a') as f:
+        for epo in range(len(hist.history['val_auc'])):
+            s = "epochs: " + str(epo + 1) + " loss: " + str(hist.history['loss'][epo])[0:6] + \
+                " acc: " + str(hist.history['acc'][epo])[0:6] + " auc: " + str(hist.history['auc'][epo])[0:6] + \
+                " f1: " + str(hist.history['f1'][epo])[0:6] + " val_loss: " + str(hist.history['val_loss'][epo])[0:6] + \
+                " val_acc: " + str(hist.history['val_acc'][epo])[0:6] + " val_auc: " + \
+                str(hist.history['val_auc'][epo])[0:6] + " val_f1: " + str(hist.history['val_f1'][epo])[0:6]
+            f.write((s + '\n'))
+    f.close()
+

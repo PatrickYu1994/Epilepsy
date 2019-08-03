@@ -19,6 +19,7 @@ def xs_gen(data_set):
     eeg = np.array(data_set['x_eeg'])
     ecg = np.array(data_set['x_ecg'])
     res = np.array(data_set['x_res'])
+
     xs = np.concatenate((eeg, ecg, res), axis=2)  # (batch, signals size, no channels) (e.g. 987, 500, 17)
     ys = np.array(data_set['y'])
     return xs, ys
@@ -65,8 +66,13 @@ if __name__ == '__main__':
     training_set = scio.loadmat("./data_set/training_set.mat")
     validation_set = scio.loadmat("./data_set/validation_set.mat")
 
-    train_x, train_y = xs_gen(training_set)
+    print(np.array(training_set['x_eeg']).shape)
+    print(np.array(training_set['x_ecg']).shape)
+    print(np.array(training_set['x_res']).shape)
+
     val_ds = xs_gen(validation_set)
+    train_x, train_y = xs_gen(training_set)
+
     model = build_model(train_x)
     print(model.summary())
 

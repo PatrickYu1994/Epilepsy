@@ -22,7 +22,7 @@ res_signals = ['THO-', 'THO+', 'Air Flow']
 window_size = 1000 # window size = 4s (250 HZ / 500 HZ downsamplt to 250 HZ)
 stride = 125 # stride = 0.5s (250 HZ / 500 HZ downsamplt to 250 HZ)
 
-p_n_rate = 1/2 # seizure:non-seizure rate = 1:5 (Totally 9011 seizure window)
+p_n_rate = 1/1 # seizure:non-seizure rate = 1:1
 train_rate = 0.7 # 70% patients data are used for training model
 val_rate = 0.2 # 20% patients data are used for validation
 test_rate = 0.1 # 10% patients data are used for testing
@@ -67,8 +67,8 @@ def read_data(data_path, eeg_signals, ecg_signals, res_signals):
         res_data = signal_transform(tmp[res_signals], 500)
         # downsample to 250 HZ (sample one point per two points)
         eeg_data = eeg_data.iloc[list(range(0, eeg_data.shape[0], 2))]
-        ecg_data = ecg_data.iloc[list(range(0, eeg_data.shape[0], 2))]
-        res_data = res_data.iloc[list(range(0, eeg_data.shape[0], 2))]
+        ecg_data = ecg_data.iloc[list(range(0, ecg_data.shape[0], 2))]
+        res_data = res_data.iloc[list(range(0, res_data.shape[0], 2))]
     else:
         eeg_data = signal_transform(tmp[eeg_signals], 250)
         ecg_data = signal_transform(tmp[ecg_signals], 250)
@@ -160,32 +160,45 @@ def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
     test_set = {"x_eeg": [], "x_ecg": [], "x_res": [], "y": []} # test set
     training_flag = random.sample(file_path, int(len(file_path) * train_rate))
     validation_flag = random.sample(list(set(file_path) - set(training_flag)), int(len(list(set(file_path) - set(training_flag))) * val_rate / (val_rate + test_rate)))
+
+    count = 0
+
+
     # separate data into training, validation, test set based on patients
     for file_name in file_path:
-        patient_id = file_name[-10:-4]
-        seizure_indexs = generate_seizure_index(patient_id, df)
-        eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
-        batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs, patient_id)
 
-        if file_name in training_flag:
-            training_set["y"] += batch_y
-            training_set["x_eeg"] += batch_x_eeg
-            training_set["x_ecg"] += batch_x_ecg
-            training_set["x_res"] += batch_x_res
-        elif file_name in validation_flag:
-            validation_set["y"] += batch_y
-            validation_set["x_eeg"] += batch_x_eeg
-            validation_set["x_ecg"] += batch_x_ecg
-            validation_set["x_res"] += batch_x_res
-        else:
-            test_set["y"] += batch_y
-            test_set["x_eeg"] += batch_x_eeg
-            test_set["x_ecg"] += batch_x_ecg
-            test_set["x_res"] += batch_x_res
+        if count <= 5:
+
+            patient_id = file_name[-10:-4]
+            seizure_indexs = generate_seizure_index(patient_id, df)
+            eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
+            batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs, patient_id)
+
+            if file_name in training_flag:
+                training_set["y"] += batch_y
+                training_set["x_eeg"] += batch_x_eeg
+                training_set["x_ecg"] += batch_x_ecg
+                training_set["x_res"] += batch_x_res
+            elif file_name in validation_flag:
+                validation_set["y"] += batch_y
+                validation_set["x_eeg"] += batch_x_eeg
+                validation_set["x_ecg"] += batch_x_ecg
+                validation_set["x_res"] += batch_x_res
+            else:
+                test_set["y"] += batch_y
+                test_set["x_eeg"] += batch_x_eeg
+                test_set["x_ecg"] += batch_x_ecg
+                test_set["x_res"] += batch_x_res
+
+        count += 1
 
     return training_set, validation_set, test_set
 
 training_set, validation_set, test_set = xy_gen(path, xlsx_path, sheet_name)
+
+print(np.array(training_set['x_eeg']).shape)
+print(np.array(training_set['x_ecg']).shape)
+print(np.array(training_set['x_res']).shape)
 
 scio.savemat('./data_set/training_set.mat', training_set)
 scio.savemat('./data_set/validation_set.mat', validation_set)

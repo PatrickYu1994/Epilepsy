@@ -161,36 +161,28 @@ def xy_gen(path, xlsx_path, sheet_name = "Seizure Information"):
     training_flag = random.sample(file_path, int(len(file_path) * train_rate))
     validation_flag = random.sample(list(set(file_path) - set(training_flag)), int(len(list(set(file_path) - set(training_flag))) * val_rate / (val_rate + test_rate)))
 
-    count = 0
-
-
     # separate data into training, validation, test set based on patients
     for file_name in file_path:
+        patient_id = file_name[-10:-4]
+        seizure_indexs = generate_seizure_index(patient_id, df)
+        eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
+        batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs, patient_id)
 
-        if count <= 5:
-
-            patient_id = file_name[-10:-4]
-            seizure_indexs = generate_seizure_index(patient_id, df)
-            eeg_data, ecg_data, res_data = read_data(file_name, eeg_signals, ecg_signals, res_signals)
-            batch_x_eeg, batch_x_ecg, batch_x_res, batch_y = window_gen(eeg_data, ecg_data, res_data, seizure_indexs, patient_id)
-
-            if file_name in training_flag:
-                training_set["y"] += batch_y
-                training_set["x_eeg"] += batch_x_eeg
-                training_set["x_ecg"] += batch_x_ecg
-                training_set["x_res"] += batch_x_res
-            elif file_name in validation_flag:
-                validation_set["y"] += batch_y
-                validation_set["x_eeg"] += batch_x_eeg
-                validation_set["x_ecg"] += batch_x_ecg
-                validation_set["x_res"] += batch_x_res
-            else:
-                test_set["y"] += batch_y
-                test_set["x_eeg"] += batch_x_eeg
-                test_set["x_ecg"] += batch_x_ecg
-                test_set["x_res"] += batch_x_res
-
-        count += 1
+        if file_name in training_flag:
+            training_set["y"] += batch_y
+            training_set["x_eeg"] += batch_x_eeg
+            training_set["x_ecg"] += batch_x_ecg
+            training_set["x_res"] += batch_x_res
+        elif file_name in validation_flag:
+            validation_set["y"] += batch_y
+            validation_set["x_eeg"] += batch_x_eeg
+            validation_set["x_ecg"] += batch_x_ecg
+            validation_set["x_res"] += batch_x_res
+        else:
+            test_set["y"] += batch_y
+            test_set["x_eeg"] += batch_x_eeg
+            test_set["x_ecg"] += batch_x_ecg
+            test_set["x_res"] += batch_x_res
 
     return training_set, validation_set, test_set
 

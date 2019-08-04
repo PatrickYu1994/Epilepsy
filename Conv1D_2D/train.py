@@ -66,10 +66,6 @@ if __name__ == '__main__':
     training_set = scio.loadmat("./data_set/training_set.mat")
     validation_set = scio.loadmat("./data_set/validation_set.mat")
 
-    print(np.array(training_set['x_eeg']).shape)
-    print(np.array(training_set['x_ecg']).shape)
-    print(np.array(training_set['x_res']).shape)
-
     val_ds = xs_gen(validation_set)
     train_x, train_y = xs_gen(training_set)
 

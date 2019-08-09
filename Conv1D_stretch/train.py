@@ -70,7 +70,7 @@ if __name__ == '__main__':
     print(model.summary())
 
     date = datetime.date.today().strftime("%Y%m%d")
-    filepath = "./result/best_model/" + date + 'best_model.{epoch:02d}-{val_loss:.4f}.h5'
+    filepath = "./result/best_model/" + date + 'best_model.{epoch:02d}-{val_auc:.4f}.h5'
     ckpt = keras.callbacks.ModelCheckpoint(filepath=filepath,
                                            monitor='val_auc',
                                            save_best_only=True,

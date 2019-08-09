@@ -83,7 +83,7 @@ if __name__ == '__main__':
     # tensorboard = TensorBoard(log_dir="./logs")
 
     # adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.95)
-    adam = keras.optimizers.Adam(lr=1e-04)
+    adam = keras.optimizers.Adam(lr=1e-6)
 
     model.compile(loss='categorical_crossentropy',
                   optimizer=adam,
@@ -93,7 +93,7 @@ if __name__ == '__main__':
         train_x,
         train_y,
         batch_size=200,
-        epochs=150,
+        epochs=1000,
         validation_data=val_ds,
         # callbacks=[ckpt, tensorboard])
         callbacks=[ckpt, saver])

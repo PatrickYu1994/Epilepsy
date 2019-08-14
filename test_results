@@ -1,3 +1,5 @@
+# Positive vs. negative ratio = 1:1
+
 Conv1D_2D_OnlyEEG:
 auc:  0.5767416260418304
 f_sc:  0.5930909365787286

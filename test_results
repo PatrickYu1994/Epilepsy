@@ -4,6 +4,10 @@ Conv1D_2D_OnlyEEG:
 auc:  0.5767416260418304
 f_sc:  0.5930909365787286
 
+Conv1D_2D_OnlyEEG_remove_artifacts by amplitude (default threshold: 2*std)
+auc:  0.5854694134297846
+f_sc:  0.6043824103256792
+
 Conv1D_2D:
 auc:  0.5774492844786916
 f_sc:  0.6105797101449276
@@ -19,4 +23,8 @@ f_sc:  0.5733884297520662
 Conv2D_FishNet:(temporary)
 auc:  0.5387639565969492
 f_sc:  0.5398493881393159
+
+LSTM:
+auc:  0.4871835194212927
+f_sc:  0.4921351814359134
 

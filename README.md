@@ -31,7 +31,7 @@ Python 3.6. platform linux-64
 
 The environment is built by anaconda on massive server. The environment requirements and installation methods can be found in requirement.txt.
 
-conda create --name <env> --file <this file>
+conda create --name \<env> --file \<this file>
 
 ## Run project
 

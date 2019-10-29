@@ -8,7 +8,7 @@ The repository includes:
  	2. Feature generation codes for the prepared dataset, which was sampled by Royal Melbourne Hospital.
  	3. Testing codes for the well-trained models.
 
-This is the first stage of the project, the codes are well-documented and designed to be easy to extend. The dataset is not public. If you have any issues about the dataset, please contact shobi.sivathamboo@monash.edu. If you have any problems about the models or project, please contact zongyuan.ge@monash.edu.
+This is the first stage of the project, the codes are well-documented and designed to be easy to extend. If you have any problems about the models or project, please contact zongyuan.ge@monash.edu. The dataset is not public. If you have any issues about the dataset, please contact shobi.sivathamboo@monash.edu. 
 
 ## Dataset
 

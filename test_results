@@ -1,30 +1,30 @@
 # Positive vs. negative ratio = 1:1
 
-Conv1D_2D_OnlyEEG:
-auc:  0.5767416260418304
-f_sc:  0.5930909365787286
-
-Conv1D_2D_OnlyEEG_remove_artifacts by amplitude (default threshold: 2*std)
-auc:  0.5854694134297846
-f_sc:  0.6043824103256792
-
-Conv1D_2D:
+Conv1D:
 auc:  0.5774492844786916
 f_sc:  0.6105797101449276
 
-Conv2D_onlyEEG:
-auc:  0.6460921528542224
-f_sc:  0.6449475427940364
+Conv1D_onlyEEG:
+auc:  0.5767416260418304
+f_sc:  0.5930909365787286
+
+Conv1D_onlyEEG_artifactRemoval \<by amplitude (default threshold: 2*std)>
+auc:  0.5854694134297846
+f_sc:  0.6043824103256792
+
+Conv1D_stretching:
+auc:  0.5941185721025318
+f_sc:  0.5733884297520662
 
 Conv2D:
 auc:  0.6495518163233213
 f_sc:  0.6223201423608168
 
-Conv1D_1D_stretch:
-auc:  0.5941185721025318
-f_sc:  0.5733884297520662
+Conv2D_onlyEEG:
+auc:  0.6460921528542224
+f_sc:  0.6449475427940364
 
-Conv2D_FishNet:(temporary)
+Conv2D_FishNet:
 auc:  0.5387639565969492
 f_sc:  0.5398493881393159
 

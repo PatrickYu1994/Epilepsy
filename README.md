@@ -37,7 +37,7 @@ conda create --name \<env> --file \<this file>
 
 1. Activate the installed environment
 
-2. cd --file<object model directory>
+2. cd --file \<object model directory>
 
 3. Feature generation with the commands: 
 
